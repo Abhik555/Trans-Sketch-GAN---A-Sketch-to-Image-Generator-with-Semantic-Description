@@ -18,9 +18,8 @@ class SketchDataset(Dataset):
         self.text_dir = os.path.join(root_dir, 'text', 'celeba-caption')
         self.emb_dir = os.path.join(root_dir, 'text_embeddings')
 
-        # --- Fast Loading via Cache ---
         if os.path.exists(self.cache_path):
-            print(f"📂 Loading dataset list from cache: {self.cache_path}")
+            print(f"Loading dataset list from cache: {self.cache_path}")
             with open(self.cache_path, 'r') as f:
                 self.valid_file_ids = json.load(f)
         else:
@@ -28,7 +27,7 @@ class SketchDataset(Dataset):
             # Save cache for next time
             with open(self.cache_path, 'w') as f:
                 json.dump(self.valid_file_ids, f)
-            print(f"💾 Dataset cache saved to {self.cache_path}")
+            print(f"Dataset cache saved to {self.cache_path}")
 
         # Standard Sort
         try:
@@ -68,19 +67,19 @@ class SketchDataset(Dataset):
         return None
 
     def _scan_dataset_multithreaded(self):
-        print(f"🔍 Scanning dataset using multi-threading...")
-        # Get all potential IDs from the embedding folder (since we precomputed them)
+        print(f"Scanning dataset using multi-threading...")
+
         all_potential_ids = [f.split('.')[0] for f in os.listdir(self.emb_dir) if f.endswith('.pt')]
 
         valid_ids = []
-        # Use ThreadPoolExecutor (Multi-threading is better than Multi-processing for I/O checks)
+        
         with ThreadPoolExecutor(max_workers=16) as executor:
-            # Map the worker function across all IDs
+
             results = list(executor.map(self._check_id, all_potential_ids))
 
         # Filter out the None results
         valid_ids = [r for r in results if r is not None]
-        print(f"✅ Found {len(valid_ids)} complete samples.")
+        print(f"Found {len(valid_ids)} complete samples.")
         return valid_ids
 
     def __len__(self):

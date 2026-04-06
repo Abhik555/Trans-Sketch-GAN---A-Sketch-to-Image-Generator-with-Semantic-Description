@@ -7,7 +7,6 @@ class LiteDiscriminatorBlock(nn.Module):
     def __init__(self, in_channels, out_channels, downsample=True):
         super().__init__()
         self.downsample = downsample
-        # Use a single Conv for the shortcut to save memory
         self.shortcut = nn.Sequential()
         if in_channels != out_channels or downsample:
             stride = 2 if downsample else 1
@@ -28,13 +27,11 @@ class LiteMultiModalDiscriminator(nn.Module):
     def __init__(self, text_dim=768):
         super().__init__()
 
-        # 1. Image + Sketch Processing (4 channels input)
         self.initial = nn.Sequential(
             spectral_norm(nn.Conv2d(4, 64, 3, padding=1)),
             nn.LeakyReLU(0.2)
         )
 
-        # 2. Optimized Downsampling Stack
         self.blocks = nn.Sequential(
             LiteDiscriminatorBlock(64, 128),  # 128x128
             LiteDiscriminatorBlock(128, 256),  # 64x64
