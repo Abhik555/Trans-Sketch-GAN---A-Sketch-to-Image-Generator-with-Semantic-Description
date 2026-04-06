@@ -1,0 +1,5 @@
+node_modules/
+.next/
+*.ckpt
+.venv/
+__pycache__/
