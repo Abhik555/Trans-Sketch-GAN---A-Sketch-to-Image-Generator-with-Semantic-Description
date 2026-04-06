@@ -43,8 +43,8 @@ def setup_gpu():
         gpu_name = torch.cuda.get_device_name(0)
         gpu_mem = torch.cuda.get_device_properties(0).total_memory / (1024 ** 3)
 
-        print(f"🖥️  GPU Detected: {gpu_name} ({gpu_mem:.1f} GB)")
-        print(f"   CUDA Version: {torch.version.cuda}")
+        print(f"GPU Detected: {gpu_name} ({gpu_mem:.1f} GB)")
+        print(f"CUDA Version: {torch.version.cuda}")
 
         # Enable TF32 for Ampere+ GPUs (RTX 30xx / 40xx) — major speedup
         torch.backends.cuda.matmul.allow_tf32 = True
@@ -57,10 +57,10 @@ def setup_gpu():
         # Set float32 matmul precision
         torch.set_float32_matmul_precision("high")
 
-        print("   ✅ TF32 enabled | cuDNN benchmark ON")
+        print("TF32 enabled | cuDNN benchmark ON")
     else:
         device = torch.device("cpu")
-        print("⚠️  No GPU found — using CPU (inference will be slow)")
+        print("No GPU found — using CPU (inference will be slow)")
 
     return device
 
@@ -94,7 +94,7 @@ def load_models():
     device = setup_gpu()
 
     # ── Initialize model architectures ──
-    print("⏳ Initializing models...")
+    print("Initializing models...")
     sketch_enc = SketchEncoder(latent_dim=512)
     gen = Generator(sketch_latent_dim=512, text_dim=768)
     dis = LiteMultiModalDiscriminator(text_dim=768)
@@ -105,8 +105,8 @@ def load_models():
     ckpt_path = find_checkpoint()
 
     if ckpt_path:
-        print(f"\n📦 Loading checkpoint: {os.path.basename(ckpt_path)}")
-        print(f"   Path: {ckpt_path}")
+        print(f"\nLoading checkpoint: {os.path.basename(ckpt_path)}")
+        print(f"Path: {ckpt_path}")
         try:
             # Use PyTorch Lightning's native load_from_checkpoint
             # This ensures EMA weights, BatchNorm stats, and all state dicts are 100% properly mapped.
@@ -123,16 +123,16 @@ def load_models():
             # Prioritize EMA generator for inference
             generator = lightning_model.generator_ema.to(device)
             
-            print("   ✅ Models successfully loaded from Lightning checkpoint")
+            print("Models successfully loaded from Lightning checkpoint")
 
         except Exception as e:
-            print(f"   ❌ Checkpoint load failed: {e}")
-            print("   ℹ️  Using randomly initialized weights (demo mode)")
+            print(f"Checkpoint load failed: {e}")
+            print("Using randomly initialized weights (demo mode)")
             sketch_encoder = sketch_enc.to(device)
             generator = gen.to(device)
     else:
-        print("\n⚠️  No checkpoint found in backend/ or checkpoints/")
-        print("   ℹ️  Running with random weights (demo mode)")
+        print("\nNo checkpoint found in backend/ or checkpoints/")
+        print("Running with random weights (demo mode)")
         sketch_encoder = sketch_enc.to(device)
         generator = gen.to(device)
 
@@ -144,15 +144,15 @@ def load_models():
     if device.type == "cuda":
         sketch_encoder = sketch_encoder.half()
         generator = generator.half()
-        print("\n   ✅ Models converted to FP16 for faster GPU inference")
+        print("\n Models converted to FP16 for faster GPU inference")
 
     # ── GPU memory summary ──
     if device.type == "cuda":
         allocated = torch.cuda.memory_allocated() / (1024 ** 2)
         reserved = torch.cuda.memory_reserved() / (1024 ** 2)
-        print(f"   📊 GPU Memory: {allocated:.0f} MB allocated / {reserved:.0f} MB reserved")
+        print(f"GPU Memory: {allocated:.0f} MB allocated / {reserved:.0f} MB reserved")
 
-    print("\n🚀 All models loaded and ready!\n")
+    print("\nAll models loaded and ready!\n")
 
 
 @asynccontextmanager
@@ -163,7 +163,7 @@ async def lifespan(app: FastAPI):
     # Cleanup GPU memory on shutdown
     if device and device.type == "cuda":
         torch.cuda.empty_cache()
-    print("👋 Shutting down...")
+    print("Shutting down...")
 
 
 # ══════════════════════════════════════════════════════════════
@@ -310,9 +310,7 @@ async def generate(
         raise HTTPException(status_code=500, detail=f"Inference failed: {str(e)}")
 
 
-# ══════════════════════════════════════════════════════════════
 #  Run directly
-# ══════════════════════════════════════════════════════════════
 
 if __name__ == "__main__":
     import uvicorn
